@@ -1,10 +1,15 @@
 import ProductCard from "@/components/ProductCard";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
 
-  const products =
-    await prisma.product.findMany({
+  let products: any[] = [];
+
+  try {
+
+    products = await prisma.product.findMany({
       include: {
         stocks: {
           include: {
@@ -13,6 +18,11 @@ export default async function Home() {
         },
       },
     });
+
+  } catch (error) {
+
+    console.error(error);
+  }
 
   return (
 
@@ -28,16 +38,14 @@ export default async function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-          {products.map(
-            (product: any) => (
+          {products.map((product: any) => (
 
-              <ProductCard
-                key={product.id}
-                product={product}
-              />
+            <ProductCard
+              key={product.id}
+              product={product}
+            />
 
-            )
-          )}
+          ))}
 
         </div>
 
