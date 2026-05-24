@@ -16,7 +16,7 @@ The system allows users to:
 
 Deployed URL:
 
-(Add your Vercel deployment URL here after deployment)
+https://allo-inventory-pdmohej82-helisara1s-projects.vercel.app/
 
 ---
 
