@@ -1,22 +1,18 @@
-import ProductCard
-from "@/components/ProductCard";
-
-async function getProducts() {
-
-  const response = await fetch(
-    "http://localhost:3000/api/products",
-    {
-      cache: "no-store",
-    }
-  );
-
-  return response.json();
-}
+import ProductCard from "@/components/ProductCard";
+import { prisma } from "@/lib/prisma";
 
 export default async function Home() {
 
   const products =
-    await getProducts();
+    await prisma.product.findMany({
+      include: {
+        stocks: {
+          include: {
+            warehouse: true,
+          },
+        },
+      },
+    });
 
   return (
 
@@ -39,6 +35,7 @@ export default async function Home() {
                 key={product.id}
                 product={product}
               />
+
             )
           )}
 
