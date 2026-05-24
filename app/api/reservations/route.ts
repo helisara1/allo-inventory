@@ -20,64 +20,31 @@ export async function POST(req: NextRequest) {
       quantity,
     } = reservationSchema.parse(body);
 
-    const result =
-      await prisma.$transaction(async (tx) => {
-
-        const stockRows =
-          await tx.$queryRawUnsafe<any[]>(`
-            SELECT *
-            FROM "Stock"
-            WHERE "productId" = '${productId}'
-            AND "warehouseId" = '${warehouseId}'
-            FOR UPDATE
-          `);
-
-        const stock = stockRows[0];
-
-        if (!stock) {
-          throw new Error("STOCK_NOT_FOUND");
-        }
-
-        const availableStock =
-          stock.totalQuantity -
-          stock.reservedQuantity;
-
-        if (availableStock < quantity) {
-          throw new Error("OUT_OF_STOCK");
-        }
-
-        await tx.stock.update({
-          where: {
-            id: stock.id,
-          },
-          data: {
-            reservedQuantity: {
-              increment: quantity,
-            },
-          },
-        });
-
-        const reservation =
-          await tx.reservation.create({
-            data: {
-              productId,
-              warehouseId,
-              quantity,
-
-              expiresAt: new Date(
-                Date.now() + 10 * 60 * 1000
-              ),
-            },
-          });
-
-        return reservation;
+    const stock =
+      await prisma.stock.findFirst({
+        where: {
+          productId,
+          warehouseId,
+        },
       });
 
-    return NextResponse.json(result);
+    if (!stock) {
 
-  } catch (error: any) {
+      return NextResponse.json(
+        {
+          error: "Stock not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
 
-    if (error.message === "OUT_OF_STOCK") {
+    const availableStock =
+      stock.totalQuantity -
+      stock.reservedQuantity;
+
+    if (availableStock < quantity) {
 
       return NextResponse.json(
         {
@@ -88,6 +55,39 @@ export async function POST(req: NextRequest) {
         }
       );
     }
+
+    await prisma.stock.update({
+      where: {
+        id: stock.id,
+      },
+
+      data: {
+        reservedQuantity: {
+          increment: quantity,
+        },
+      },
+    });
+
+    const reservation =
+      await prisma.reservation.create({
+        data: {
+          productId,
+          warehouseId,
+          quantity,
+
+          expiresAt: new Date(
+            Date.now() + 10 * 60 * 1000
+          ),
+        },
+      });
+
+    return NextResponse.json({
+      id: reservation.id,
+    });
+
+  } catch (error) {
+
+    console.error(error);
 
     return NextResponse.json(
       {
