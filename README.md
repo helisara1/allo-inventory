@@ -80,8 +80,20 @@ Shows reservation states including:
 
 ![Reservation Lifecycle](./screenshots/Reservationlifecyclestates.png)
 
+
+## 409 Conflict Handling
+
+Prevents reservations when stock is unavailable.
+
+![409 Conflict](./screenshots/409.png)
+
 ---
 
+## 410 Reservation Expiry
+
+Automatically handles expired reservations.
+
+![410 Gone](./screenshots/410.png)
 ## Inventory Stock Tracking
 
 Tracks:
