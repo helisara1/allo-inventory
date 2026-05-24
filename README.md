@@ -1,36 +1,230 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Inventory Reservation System
 
-## Getting Started
+A full-stack inventory reservation system built with **Next.js**, **Prisma**, **PostgreSQL (Supabase)**, and **TypeScript**.
 
-First, run the development server:
+The system allows users to:
 
-```bash
+- View inventory across warehouses
+- Reserve stock safely
+- Confirm reservations
+- Release reservations
+- Handle reservation expiry automatically
+
+---
+
+# Live Demo
+
+Deployed URL:
+
+(Add your Vercel deployment URL here after deployment)
+
+---
+
+# GitHub Repository
+
+https://github.com/helisara1/allo-inventory
+
+---
+
+# Features
+
+- Product inventory listing
+- Warehouse stock tracking
+- Reservation creation with expiry
+- Reservation confirmation workflow
+- Reservation release workflow
+- Expired reservation cleanup
+- Countdown timer UI
+- Concurrency-safe stock reservation logic
+- PostgreSQL-backed persistence
+- Responsive frontend UI
+
+---
+
+# Tech Stack
+
+- Next.js 16 (App Router)
+- TypeScript
+- Prisma ORM
+- PostgreSQL (Supabase)
+- Tailwind CSS
+- Vercel Deployment
+
+---
+
+# Screenshots
+
+## Inventory Listing
+
+Shows products, warehouses, and available stock.
+
+![Inventory Listing](./screenshots/home.png)
+
+---
+
+## Reservation Countdown Page
+
+Displays reservation expiry timer with confirm and release actions.
+
+![Reservation Countdown](./screenshots/reservationtimerpage.png)
+
+---
+
+## Reservation Lifecycle Tracking
+
+Shows reservation states including:
+- PENDING
+- CONFIRMED
+- RELEASED
+- EXPIRED
+
+![Reservation Lifecycle](./screenshots/Reservationlifecyclestates.png)
+
+---
+
+## Inventory Stock Tracking
+
+Tracks:
+- totalQuantity
+- reservedQuantity
+
+Used to prevent overselling during concurrent reservations.
+
+![Inventory Stock Tracking](./screenshots/Inventorystocktracking.png)
+
+---
+
+# API Endpoints
+
+## Products
+
+```txt
+GET /api/products
+Warehouses
+GET /api/warehouses
+
+Returns warehouse information.
+
+Create Reservation
+POST /api/reservations
+
+Creates a reservation if stock is available.
+
+Confirm Reservation
+POST /api/reservations/[id]/confirm
+
+Confirms reservation and permanently reduces stock.
+
+Release Reservation
+POST /api/reservations/[id]/release
+
+Releases reservation and restores stock.
+
+Release Expired Reservations
+POST /api/cron/release-expired
+
+Automatically restores stock from expired reservations.
+
+Running Locally
+1. Clone Repository
+git clone https://github.com/helisara1/allo-inventory.git
+cd allo-inventory
+2. Install Dependencies
+npm install
+3. Configure Environment Variables
+
+Create a .env file:
+
+DATABASE_URL=your_supabase_postgres_connection_string
+4. Push Prisma Schema
+npx prisma db push
+5. Seed Database
+npx prisma db seed
+6. Run Development Server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Application runs at:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+http://localhost:3000
+Reservation Flow
+1. Reserve Inventory
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+User reserves available inventory.
 
-## Learn More
+System:
 
-To learn more about Next.js, take a look at the following resources:
+validates stock
+increases reservedQuantity
+creates reservation entry
+2. Reservation Expiry
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Reservations automatically expire after:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+10 minutes
 
-## Deploy on Vercel
+if not confirmed.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. Confirm Reservation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Confirmation:
+
+permanently decreases totalQuantity
+decreases reservedQuantity
+updates reservation status to CONFIRMED
+4. Release Reservation
+
+Release:
+
+restores reserved stock
+decreases reservedQuantity
+updates reservation status to RELEASED
+Expiry Mechanism
+
+Reservations store an:
+
+expiresAt
+
+timestamp.
+
+Expired reservations are cleaned up using:
+
+POST /api/cron/release-expired
+
+This endpoint:
+
+finds expired pending reservations
+restores stock
+updates reservation status to EXPIRED
+
+In production, this route can be triggered using a scheduled cron job.
+
+Concurrency Handling
+
+To prevent race conditions and overselling:
+
+Prisma database transactions are used
+Stock validation occurs atomically
+Reservation updates happen inside transactional workflows
+
+This ensures:
+
+concurrent reservations cannot oversell inventory
+stock integrity remains consistent
+Tradeoffs / Future Improvements
+
+Given more time, I would improve:
+
+Background cron scheduling
+Redis-based distributed locking
+Real-time stock updates
+Better notification UX
+Automated tests
+Optimistic UI updates
+Admin dashboard
+Reservation analytics
+Deployment
+Frontend: Vercel
+Database: Supabase PostgreSQL
+Author
+
+Helinia Sarah
