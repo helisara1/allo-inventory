@@ -93,7 +93,7 @@ Prevents reservations when stock is unavailable.
 
 Automatically handles expired reservations.
 
-![410 Gone](./screenshots/410.png)
+![410 Gone](./screenshots/410.jpeg)
 ## Inventory Stock Tracking
 
 Tracks:
@@ -270,45 +270,60 @@ Release:
 
 ---
 
-# Expiry Mechanism
+## Expiry Mechanism
 
-Reservations store an:
+Each reservation stores an:
 
-```txt
 expiresAt
-```
 
-timestamp.
+timestamp that defines the reservation validity window.
 
-Expired reservations are cleaned up using:
+When a reservation is created:
+- stock is temporarily reserved
+- reservation status is marked as PENDING
+- a 10-minute expiry timer is assigned
 
-```txt
+Expired reservations are automatically handled through:
+
 POST /api/cron/release-expired
-```
 
-This endpoint:
-- finds expired pending reservations
-- restores stock
-- updates reservation status to `EXPIRED`
+This mechanism:
 
-In production, this route can be triggered using a scheduled cron job.
+- detects expired pending reservations
+- restores reserved stock back to inventory
+- updates reservation status to EXPIRED
+- prevents stale reservations from blocking inventory
+
+This ensures inventory availability remains accurate even if users abandon reservations.
+
+In production environments, this endpoint can be scheduled using a cron job for automatic cleanup.
 
 ---
 
-# Concurrency Handling
+## Concurrency Handling
 
-To prevent race conditions and overselling:
+The project implements concurrency-safe reservation logic to prevent overselling and race conditions.
 
-- Prisma database transactions are used
-- Stock validation occurs atomically
-- Reservation updates happen inside transactional workflows
+Concurrency protection is implemented using:
+
+- Prisma transactional workflows
+- atomic stock validation
+- controlled reservation updates
+- reservation state consistency checks
+
+Before creating a reservation:
+- available stock is validated
+- reserved quantity is checked
+- inventory updates occur inside transactional operations
 
 This ensures:
-- concurrent reservations cannot oversell inventory
+
+- multiple users cannot oversell the same inventory
+- reservation conflicts are prevented
 - stock integrity remains consistent
+- simultaneous reservation requests are handled safely
 
----
-
+The system maintains accurate inventory synchronization even during concurrent reservation attempts.
 # Tradeoffs / Future Improvements
 
 Given more time, I would improve:
