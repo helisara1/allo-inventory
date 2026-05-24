@@ -10,7 +10,8 @@ type Stock = {
     location: string;
   };
 
-  availableStock: number;
+  totalQuantity: number;
+  reservedQuantity: number;
 };
 
 type Product = {
@@ -119,7 +120,7 @@ export default function ProductCard({
 
                 Available:
                 {" "}
-                {stock.availableStock}
+                {stock.totalQuantity - stock.reservedQuantity}
 
               </span>
 
