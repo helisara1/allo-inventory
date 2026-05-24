@@ -1,9 +1,15 @@
 "use client";
+
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type Stock = {
-  warehouse: string;
+  warehouse: {
+    id: string;
+    name: string;
+    location: string;
+  };
+
   availableStock: number;
 };
 
@@ -22,26 +28,17 @@ export default function ProductCard({
 
   const [loading, setLoading] =
     useState(false);
+
   const router = useRouter();
+
   async function reserveProduct() {
 
     try {
 
       setLoading(true);
 
-      const stock =
-        product.stocks[0];
-
-      const warehouseResponse =
-        await fetch(
-          "http://localhost:3000/api/warehouses"
-        );
-
-      const warehouses =
-        await warehouseResponse.json();
-
       const response = await fetch(
-        "http://localhost:3000/api/reservations",
+        "/api/reservations",
         {
           method: "POST",
 
@@ -54,7 +51,7 @@ export default function ProductCard({
             productId: product.id,
 
             warehouseId:
-              warehouses[0].id,
+              product.stocks[0].warehouse.id,
 
             quantity: 1,
           }),
@@ -65,11 +62,14 @@ export default function ProductCard({
         await response.json();
 
       if (!response.ok) {
+
         alert(data.error);
         return;
       }
 
-      router.push(`/reservation/${data.id}`);
+      router.push(
+        `/reservation/${data.id}`
+      );
 
     } catch {
 
@@ -94,6 +94,7 @@ export default function ProductCard({
         <p className="text-gray-500">
           SKU: {product.sku}
         </p>
+
       </div>
 
       <div className="space-y-2">
@@ -107,18 +108,25 @@ export default function ProductCard({
             >
 
               <span>
-                {stock.warehouse}
+
+                {stock.warehouse.name}
+                {" - "}
+                {stock.warehouse.location}
+
               </span>
 
               <span>
+
                 Available:
                 {" "}
                 {stock.availableStock}
+
               </span>
 
             </div>
           )
         )}
+
       </div>
 
       <button
