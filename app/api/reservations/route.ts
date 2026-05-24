@@ -9,9 +9,7 @@ const reservationSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-
   try {
-
     const body = await req.json();
 
     const {
@@ -20,39 +18,27 @@ export async function POST(req: NextRequest) {
       quantity,
     } = reservationSchema.parse(body);
 
-    const stock =
-      await prisma.stock.findFirst({
-        where: {
-          productId,
-          warehouseId,
-        },
-      });
+    const stock = await prisma.stock.findFirst({
+      where: {
+        productId,
+        warehouseId,
+      },
+    });
 
     if (!stock) {
-
       return NextResponse.json(
-        {
-          error: "Stock not found",
-        },
-        {
-          status: 404,
-        }
+        { error: "Stock not found" },
+        { status: 404 }
       );
     }
 
     const availableStock =
-      stock.totalQuantity -
-      stock.reservedQuantity;
+      stock.totalQuantity - stock.reservedQuantity;
 
     if (availableStock < quantity) {
-
       return NextResponse.json(
-        {
-          error: "Not enough stock",
-        },
-        {
-          status: 409,
-        }
+        { error: "Not enough stock" },
+        { status: 409 }
       );
     }
 
@@ -60,7 +46,6 @@ export async function POST(req: NextRequest) {
       where: {
         id: stock.id,
       },
-
       data: {
         reservedQuantity: {
           increment: quantity,
@@ -74,7 +59,6 @@ export async function POST(req: NextRequest) {
           productId,
           warehouseId,
           quantity,
-
           expiresAt: new Date(
             Date.now() + 10 * 60 * 1000
           ),
